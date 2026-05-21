@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Australia's Vanishing Wildlife</title>
+
+  <!-- Vega-Lite -->
+  <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── CSS Variables ─── */
+    :root {
+      --bg:        #0d1117;
+      --bg2:       #141b24;
+      --bg3:       #1c2733;
+      --accent:    #e8833a;
+      --accent2:   #f0b429;
+      --green:     #3ddc84;
+      --red:       #e05252;
+      --text:      #e6edf3;
+      --muted:     #8b949e;
+      --border:    #30363d;
+      --card:      #161b22;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { background: #0d1117; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Source Sans 3', sans-serif;
+      font-weight: 300;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* ─── HERO ─── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 4rem 2rem;
+      position: relative;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(232,131,58,0.15) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(61,220,132,0.08) 0%, transparent 50%),
+        var(--bg);
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(1.5px 1.5px at 15% 25%, rgba(255,255,255,0.2) 0%, transparent 100%),
+        radial-gradient(1px 1px at 45% 65%, rgba(255,255,255,0.12) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 75% 15%, rgba(255,255,255,0.18) 0%, transparent 100%),
+        radial-gradient(1px 1px at 90% 55%, rgba(255,255,255,0.1) 0%, transparent 100%),
+        radial-gradient(1px 1px at 30% 85%, rgba(255,255,255,0.13) 0%, transparent 100%);
+      pointer-events: none;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), var(--accent2), var(--accent), transparent);
+      opacity: 0.4;
+    }
+
+    .hero-eyebrow {
+      font-size: 0.8rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+    }
+
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.8rem, 7vw, 6rem);
+      font-weight: 900;
+      line-height: 1.05;
+      margin-bottom: 1rem;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(120deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: block;
+    }
+
+    .hero-sub {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      color: var(--muted);
+      max-width: 600px;
+      margin: 0 auto 3rem;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 3rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 2rem;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-number {
+      font-family: 'Playfair Display', serif;
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--accent);
+      display: block;
+      line-height: 1;
+      animation: fadeUp 0.8s ease both;
+    }
+
+    .stat-item:nth-child(1) .stat-number { animation-delay: 0.1s; }
+    .stat-item:nth-child(2) .stat-number { animation-delay: 0.2s; }
+    .stat-item:nth-child(3) .stat-number { animation-delay: 0.3s; }
+    .stat-item:nth-child(4) .stat-number { animation-delay: 0.4s; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 0.4rem;
+    }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--muted);
+      font-size: 0.8rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50%       { transform: translateX(-50%) translateY(6px); }
+    }
+
+    /* ─── SECTIONS ─── */
+    section {
+      padding: 5rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 700;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+
+    .section-desc {
+      color: var(--muted);
+      max-width: 700px;
+      margin-bottom: 3rem;
+      font-size: 1.05rem;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0;
+    }
+
+    .full-width-section {
+      background: var(--bg2);
+      padding: 5rem 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .full-width-section > .inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    /* ─── CHART CONTAINERS ─── */
+    .chart-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .chart-grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .chart-wide {
+      width: 100%;
+    }
+
+    .chart-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+
+    .chart-card:hover {
+      border-color: rgba(232,131,58,0.35);
+      box-shadow: 0 0 28px rgba(232,131,58,0.06), 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    .chart-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+    }
+
+    .chart-card.green-top::before {
+      background: linear-gradient(90deg, var(--green), #2ab5f5);
+    }
+
+    .chart-card.red-top::before {
+      background: linear-gradient(90deg, var(--red), #c84b8f);
+    }
+
+    .chart-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+
+    .chart-subtitle {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 1.2rem;
+      line-height: 1.4;
+    }
+
+    .chart-container {
+      width: 100%;
+      min-height: 200px;
+    }
+
+    /* ─── CALLOUT BOX ─── */
+    .callout {
+      background: linear-gradient(135deg, rgba(232,131,58,0.12), rgba(240,180,41,0.06));
+      border: 1px solid rgba(232,131,58,0.3);
+      border-radius: 12px;
+      padding: 2rem 2.5rem;
+      margin: 2rem 0;
+    }
+
+    .callout-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+
+    .callout h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      margin-bottom: 0.5rem;
+      color: var(--accent2);
+    }
+
+    .callout p { color: var(--muted); font-size: 0.95rem; }
+
+    /* ─── SPECIES SPOTLIGHT ─── */
+    .species-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .species-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.2rem;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .species-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-3px);
+    }
+
+    .species-emoji { font-size: 2rem; margin-bottom: 0.5rem; }
+
+    .species-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.2rem;
+    }
+
+    .species-sci {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-style: italic;
+      margin-bottom: 0.5rem;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-cr  { background: rgba(224,82,82,0.2);  color: #e05252; }
+    .badge-en  { background: rgba(240,180,41,0.2); color: #f0b429; }
+    .badge-vu  { background: rgba(61,220,132,0.2); color: #3ddc84; }
+
+    /* ─── FOOTER ─── */
+    footer {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      padding: 3rem 2rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+      position: relative;
+    }
+
+    footer::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), var(--accent2), var(--green), transparent);
+      opacity: 0.35;
+    }
+
+    footer strong { color: var(--text); }
+
+    footer .sources {
+      max-width: 700px;
+      margin: 1rem auto 0;
+      line-height: 1.8;
+    }
+
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 768px) {
+      .chart-grid-2,
+      .chart-grid-3 { grid-template-columns: 1fr; }
+      .hero-stats { gap: 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════
+     HERO
+═════════════════════════════════════════ -->
+<div class="hero">
+  <div class="hero-eyebrow">Data Visualisation 2 · FIT2179 · Monash University</div>
+  <h1>
+    Australia's
+    <span>Vanishing Wildlife</span>
+  </h1>
+  <p class="hero-sub">
+    Over 1,900 species are listed as threatened under Australian law.
+    This is the story of how we got here — and what is still at risk.
+  </p>
+
+  <div class="hero-stats">
+    <div class="stat-item">
+      <span class="stat-number">1,923</span>
+      <div class="stat-label">Threatened species</div>
+    </div>
+    <div class="stat-item">
+      <span class="stat-number">100+</span>
+      <div class="stat-label">Extinct since 1788</div>
+    </div>
+    <div class="stat-item">
+      <span class="stat-number">3B</span>
+      <div class="stat-label">Animals affected by<br>2019–20 bushfires</div>
+    </div>
+    <div class="stat-item">
+      <span class="stat-number">84%</span>
+      <div class="stat-label">Mammals found<br>nowhere else on Earth</div>
+    </div>
+  </div>
+
+  <div class="scroll-hint">↓ scroll to explore ↓</div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     SECTION 1 — THE SCALE
+═════════════════════════════════════════ -->
+<section>
+  <div class="section-label">Section 1</div>
+  <h2 class="section-title">A Crisis Three Decades in the Making</h2>
+  <p class="section-desc">
+    Since the EPBC Act came into force in 1992, the number of species listed as threatened
+    has tripled. The rate of listing has accelerated dramatically after major ecological disasters.
+  </p>
+
+  <!-- Chart 1: Trend line -->
+  <div class="chart-card chart-wide">
+    <div class="chart-title">📈 Threatened Species Listed Under EPBC Act, 1992–2024</div>
+    <div class="chart-subtitle">Total number of species on the national threatened list, broken down by threat category. The 2019–20 Black Summer bushfires triggered a surge in new listings.</div>
+    <div class="chart-container" id="chart-trend"></div>
+  </div>
+
+  <div style="margin-top: 1.5rem;" class="chart-grid-2">
+
+    <!-- Chart 2: Donut by status -->
+    <div class="chart-card red-top">
+      <div class="chart-title">🔴 Current Status Breakdown</div>
+      <div class="chart-subtitle">Distribution of the 1,923 currently listed threatened species by their EPBC Act conservation status.</div>
+      <div class="chart-container" id="chart-status-donut"></div>
+    </div>
+
+    <!-- Chart 3: Bar by group -->
+    <div class="chart-card">
+      <div class="chart-title">🐾 Species by Animal Group</div>
+      <div class="chart-subtitle">Which animal groups are most at risk? Plants account for the largest share, but mammals face the highest extinction rate per capita.</div>
+      <div class="chart-container" id="chart-group-bar"></div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ════════════════════════════════════════
+     SECTION 2 — WHERE (MAP)
+═════════════════════════════════════════ -->
+<div class="full-width-section">
+  <div class="inner">
+    <div class="section-label">Section 2</div>
+    <h2 class="section-title">Where Are They Disappearing?</h2>
+    <p class="section-desc">
+      Threatened species are distributed unevenly across Australia. Queensland and New South Wales
+      host the highest numbers, reflecting their diverse ecosystems — but also their rapid land clearing.
+    </p>
+
+    <!-- Chart 4: Choropleth map -->
+    <div class="chart-card chart-wide">
+      <div class="chart-title">🗺️ Total Threatened Species by State & Territory</div>
+      <div class="chart-subtitle">Choropleth map showing the total count of threatened species per state. Click a state to see its breakdown. Source: EPBC Act listings, February 2026.</div>
+      <div class="chart-container" id="chart-map" style="min-height:420px;"></div>
+    </div>
+
+    <div style="margin-top: 1.5rem;" class="chart-grid-2">
+
+      <!-- Chart 5: Stacked bar by state + group -->
+      <div class="chart-card green-top">
+        <div class="chart-title">📊 Species Composition by State</div>
+        <div class="chart-subtitle">Stacked breakdown of threatened animal groups per state. WA leads in mammal diversity at risk.</div>
+        <div class="chart-container" id="chart-state-stacked"></div>
+      </div>
+
+      <!-- Chart 6: Heatmap state × status -->
+      <div class="chart-card">
+        <div class="chart-title">🟥 State × Threat Status Heatmap</div>
+        <div class="chart-subtitle">How many Critically Endangered, Endangered and Vulnerable species does each state carry? Darker = more species.</div>
+        <div class="chart-container" id="chart-heatmap"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     SECTION 3 — WHY
+═════════════════════════════════════════ -->
+<section>
+  <div class="section-label">Section 3</div>
+  <h2 class="section-title">What Is Driving the Crisis?</h2>
+  <p class="section-desc">
+    Australia's biodiversity crisis has multiple overlapping causes. Understanding the primary
+    threats is essential to designing effective conservation responses.
+  </p>
+
+  <!-- Chart 7: Threats horizontal bar -->
+  <div class="chart-card chart-wide">
+    <div class="chart-title">⚠️ Primary Threats to Australia's Threatened Species</div>
+    <div class="chart-subtitle">Number of threatened species affected by each broad threat category. A single species can be affected by multiple threats. Source: Ward et al. (2021), EPBC Threat Assessments.</div>
+    <div class="chart-container" id="chart-threats"></div>
+  </div>
+
+  <div style="margin-top: 1.5rem;" class="chart-grid-2">
+
+    <!-- Chart 8: Threats by group (dot/bubble) -->
+    <div class="chart-card">
+      <div class="chart-title">🔵 Threat Profile by Animal Group</div>
+      <div class="chart-subtitle">Which threats dominate for each animal group? Bubble size = number of species affected by that threat within the group.</div>
+      <div class="chart-container" id="chart-bubble"></div>
+    </div>
+
+    <!-- Chart 9: Primary threat donut -->
+    <div class="chart-card red-top">
+      <div class="chart-title">🥧 Proportion of Species by Primary Threat</div>
+      <div class="chart-subtitle">Habitat loss and invasive species together account for over 75% of all threatened species listings.</div>
+      <div class="chart-container" id="chart-threat-donut"></div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ════════════════════════════════════════
+     SECTION 4 — SPECIES SPOTLIGHT
+═════════════════════════════════════════ -->
+<section>
+  <div class="section-label">Section 4</div>
+  <h2 class="section-title">Species in the Spotlight</h2>
+  <p class="section-desc">
+    Behind every data point is a living creature. Here are some of Australia's most iconic
+    species currently fighting for survival.
+  </p>
+
+  <div class="species-grid">
+    <div class="species-card">
+      <div class="species-emoji">🐨</div>
+      <div class="species-name">Koala</div>
+      <div class="species-sci">Phascolarctos cinereus</div>
+      <span class="badge badge-en">Endangered</span>
+    </div>
+    <div class="species-card">
+      <div class="species-emoji">🦜</div>
+      <div class="species-name">Swift Parrot</div>
+      <div class="species-sci">Lathamus discolor</div>
+      <span class="badge badge-cr">Critically Endangered</span>
+    </div>
+    <div class="species-card">
+      <div class="species-emoji">😈</div>
+      <div class="species-name">Tasmanian Devil</div>
+      <div class="species-sci">Sarcophilus harrisii</div>
+      <span class="badge badge-en">Endangered</span>
+    </div>
+    <div class="species-card">
+      <div class="species-emoji">🐸</div>
+      <div class="species-name">Corroboree Frog</div>
+      <div class="species-sci">Pseudophryne corroboree</div>
+      <span class="badge badge-cr">Critically Endangered</span>
+    </div>
+    <div class="species-card">
+      <div class="species-emoji">🦘</div>
+      <div class="species-name">Bridled Nailtail Wallaby</div>
+      <div class="species-sci">Onychogalea fraenata</div>
+      <span class="badge badge-en">Endangered</span>
+    </div>
+    <div class="species-card">
+      <div class="species-emoji">🐦</div>
+      <div class="species-name">Regent Honeyeater</div>
+      <div class="species-sci">Anthochaera phrygia</div>
+      <span class="badge badge-cr">Critically Endangered</span>
+    </div>
+    <div class="species-card">
+      <div class="species-emoji">🦭</div>
+      <div class="species-name">Australian Sea Lion</div>
+      <div class="species-sci">Neophoca cinerea</div>
+      <span class="badge badge-en">Endangered</span>
+    </div>
+    <div class="species-card">
+      <div class="species-emoji">🐡</div>
+      <div class="species-name">Murray Cod</div>
+      <div class="species-sci">Maccullochella peelii</div>
+      <span class="badge badge-vu">Vulnerable</span>
+    </div>
+  </div>
+
+  <!-- Chart 10: Interactive scatter — year listed vs number of states -->
+  <div style="margin-top: 2rem;" class="chart-card chart-wide green-top">
+    <div class="chart-title">🔍 Species Detail: Listing Year vs. Geographic Range</div>
+    <div class="chart-subtitle">Each dot = one species. X axis = year first listed under EPBC Act. Y axis = number of states/territories where it occurs. Colour = animal group. Hover for species name. Earlier listings with smaller ranges are the most at risk.</div>
+    <div class="chart-container" id="chart-scatter" style="min-height:350px;"></div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ════════════════════════════════════════
+     SECTION 5 — EXTINCTION TIMELINE
+═════════════════════════════════════════ -->
+<section>
+  <div class="section-label">Section 5</div>
+  <h2 class="section-title">A History of Loss</h2>
+  <p class="section-desc">
+    Australia has the world's worst mammal extinction record. Since European settlement in 1788,
+    more than 100 species have been lost forever.
+  </p>
+
+  <div class="callout">
+    <div class="callout-icon">⚠️</div>
+    <h3>The Bramble Cay Melomys — A World First</h3>
+    <p>In 2016, the Bramble Cay Melomys became the first mammal in the world to be declared
+    extinct due to climate change. Rising sea levels inundated its only habitat — a tiny coral
+    cay in the Torres Strait — destroying its food supply and shelter.</p>
+  </div>
+
+  <!-- Chart 11: Timeline chart -->
+  <div class="chart-card chart-wide red-top">
+    <div class="chart-title">📅 Australia's Extinction Timeline: Mammals Lost Since 1788</div>
+    <div class="chart-subtitle">Key extinctions and ecological turning points since European settlement. Each marker represents an extinction event or a major conservation milestone.</div>
+    <div id="chart-timeline-html"></div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════
+     FOOTER
+═════════════════════════════════════════ -->
+<footer>
+  <strong>Australia's Vanishing Wildlife</strong> · Data Visualisation 2 · FIT2179 · Monash University · 2026<br />
+  Designed and built by Anh Quan Do · May 2026<br />
+
+  <div class="sources">
+    <strong>Data Sources:</strong><br />
+    Australian Government DCCEEW (2026). <em>Threatened Species and Ecological Communities of National Environmental Significance</em>.
+    <a href="https://data.gov.au/data/dataset/threatened-species-state-lists" target="_blank">data.gov.au</a> · CC BY 3.0 AU<br />
+    Ward, M. et al. (2021). A national-scale dataset for threats impacting Australia's imperiled flora and fauna.
+    <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8427562/" target="_blank">Ecology &amp; Evolution</a><br />
+    Threatened Species Index (TSX). University of Queensland.
+    <a href="https://tsx.org.au" target="_blank">tsx.org.au</a><br /><br />
+
+    <strong>Tools:</strong> Vega-Lite v5, Vega-Embed v6, Google Fonts (Playfair Display, Source Sans 3), Claude, ChatGPT<br />
+    
+  </div>
+</footer>
+
+
+<!-- ════════════════════════════════════════
+     VEGA-LITE SPECS
+═════════════════════════════════════════ -->
+<script>
+// ── Shared theme ──────────────────────────────────────────
+const THEME = {
+  background: "transparent",
+  title: { color: "#e6edf3", font: "Playfair Display", fontSize: 13 },
+  axis: {
+    domainColor: "#30363d", gridColor: "#21262d", tickColor: "#30363d",
+    labelColor: "#e6edf3", titleColor: "#e6edf3", labelFont: "Source Sans 3",
+    titleFont: "Source Sans 3", labelFontSize: 11, titleFontSize: 11
+  },
+  legend: {
+    labelColor: "#e6edf3", titleColor: "#e6edf3",
+    labelFont: "Source Sans 3", titleFont: "Source Sans 3",
+    labelFontSize: 11, titleFontSize: 12,
+    fillColor: "#161b22", strokeColor: "#30363d",
+    padding: 10, cornerRadius: 6
+  },
+  view: { stroke: "transparent" },
+  mark: { tooltip: true }
+};
+
+const EMBED_CONFIG = {
+  actions: false,
+  config: {
+    background: "transparent",
+    axis: {
+      domainColor: "#30363d", gridColor: "#21262d", tickColor: "#30363d",
+      labelColor: "#e6edf3", titleColor: "#e6edf3",
+      labelFont: "Source Sans 3", titleFont: "Source Sans 3",
+      labelFontSize: 11, titleFontSize: 11
+    },
+    legend: {
+      labelColor: "#e6edf3", titleColor: "#e6edf3",
+      labelFont: "Source Sans 3", titleFont: "Source Sans 3",
+      labelFontSize: 11, titleFontSize: 12,
+      fillColor: "#161b22", strokeColor: "#30363d",
+      padding: 10, cornerRadius: 6
+    },
+    view: { stroke: "transparent" },
+    title: { color: "#e6edf3", font: "Playfair Display" }
+  }
+};
+
+const STATUS_COLORS = {
+  "Critically Endangered": "#e05252",
+  "Endangered":            "#f0b429",
+  "Vulnerable":            "#3ddc84"
+};
+
+const GROUP_COLORS = {
+  "Mammal":  "#e8833a",
+  "Bird":    "#3ddc84",
+  "Reptile": "#f0b429",
+  "Frog":    "#2ab5f5",
+  "Fish":    "#c84b8f",
+  "Plant":   "#7c6af7"
+};
+
+// ── Inline data (matches the CSVs we created) ─────────────
+
+const trendData = [
+  {Year:1992, Category:"Critically Endangered", Count:45},
+  {Year:1992, Category:"Endangered",            Count:187},
+  {Year:1992, Category:"Vulnerable",            Count:400},
+  {Year:1995, Category:"Critically Endangered", Count:52},
+  {Year:1995, Category:"Endangered",            Count:201},
+  {Year:1995, Category:"Vulnerable",            Count:461},
+  {Year:2000, Category:"Critically Endangered", Count:61},
+  {Year:2000, Category:"Endangered",            Count:234},
+  {Year:2000, Category:"Vulnerable",            Count:536},
+  {Year:2004, Category:"Critically Endangered", Count:72},
+  {Year:2004, Category:"Endangered",            Count:267},
+  {Year:2004, Category:"Vulnerable",            Count:603},
+  {Year:2008, Category:"Critically Endangered", Count:84},
+  {Year:2008, Category:"Endangered",            Count:312},
+  {Year:2008, Category:"Vulnerable",            Count:693},
+  {Year:2010, Category:"Critically Endangered", Count:91},
+  {Year:2010, Category:"Endangered",            Count:334},
+  {Year:2010, Category:"Vulnerable",            Count:753},
+  {Year:2013, Category:"Critically Endangered", Count:98},
+  {Year:2013, Category:"Endangered",            Count:356},
+  {Year:2013, Category:"Vulnerable",            Count:811},
+  {Year:2016, Category:"Critically Endangered", Count:112},
+  {Year:2016, Category:"Endangered",            Count:401},
+  {Year:2016, Category:"Vulnerable",            Count:906},
+  {Year:2019, Category:"Critically Endangered", Count:124},
+  {Year:2019, Category:"Endangered",            Count:443},
+  {Year:2019, Category:"Vulnerable",            Count:981},
+  {Year:2022, Category:"Critically Endangered", Count:142},
+  {Year:2022, Category:"Endangered",            Count:512},
+  {Year:2022, Category:"Vulnerable",            Count:1107},
+  {Year:2024, Category:"Critically Endangered", Count:156},
+  {Year:2024, Category:"Endangered",            Count:563},
+  {Year:2024, Category:"Vulnerable",            Count:1204},
+];
+
+const statusData = [
+  {Status:"Critically Endangered", Count:156},
+  {Status:"Endangered",            Count:563},
+  {Status:"Vulnerable",            Count:1204},
+];
+
+const groupData = [
+  {Group:"Plant",   Count:789},
+  {Group:"Bird",    Count:368},
+  {Group:"Mammal",  Count:311},
+  {Group:"Reptile", Count:228},
+  {Group:"Frog",    Count:98},
+  {Group:"Fish",    Count:87},
+  {Group:"Insect",  Count:42},
+];
+
+const stateData = [
+  {State:"QLD", Mammals:115, Birds:398, Reptiles:289, Frogs:102, Fish:78, Plants:216},
+  {State:"NSW", Mammals:98,  Birds:312, Reptiles:201, Frogs:88,  Fish:67, Plants:239},
+  {State:"WA",  Mammals:103, Birds:289, Reptiles:198, Frogs:67,  Fish:33, Plants:181},
+  {State:"VIC", Mammals:72,  Birds:245, Reptiles:156, Frogs:63,  Fish:44, Plants:98},
+  {State:"SA",  Mammals:58,  Birds:187, Reptiles:134, Frogs:41,  Fish:22, Plants:79},
+  {State:"NT",  Mammals:67,  Birds:178, Reptiles:145, Frogs:55,  Fish:14, Plants:30},
+  {State:"TAS", Mammals:34,  Birds:118, Reptiles:78,  Frogs:23,  Fish:19, Plants:40},
+  {State:"ACT", Mammals:8,   Birds:42,  Reptiles:22,  Frogs:6,   Fish:5,  Plants:15},
+];
+
+// Flatten for stacked bar
+const stateFlat = [];
+stateData.forEach(d => {
+  ["Mammals","Birds","Reptiles","Frogs","Fish","Plants"].forEach(g => {
+    stateFlat.push({State: d.State, Group: g, Count: d[g]});
+  });
+});
+
+const heatmapData = [
+  {State:"QLD", Status:"Critically Endangered", Count:171},
+  {State:"QLD", Status:"Endangered",            Count:389},
+  {State:"QLD", Status:"Vulnerable",            Count:638},
+  {State:"NSW", Status:"Critically Endangered", Count:184},
+  {State:"NSW", Status:"Endangered",            Count:356},
+  {State:"NSW", Status:"Vulnerable",            Count:465},
+  {State:"WA",  Status:"Critically Endangered", Count:139},
+  {State:"WA",  Status:"Endangered",            Count:312},
+  {State:"WA",  Status:"Vulnerable",            Count:420},
+  {State:"VIC", Status:"Critically Endangered", Count:123},
+  {State:"VIC", Status:"Endangered",            Count:224},
+  {State:"VIC", Status:"Vulnerable",            Count:331},
+  {State:"SA",  Status:"Critically Endangered", Count:51},
+  {State:"SA",  Status:"Endangered",            Count:177},
+  {State:"SA",  Status:"Vulnerable",            Count:293},
+  {State:"NT",  Status:"Critically Endangered", Count:18},
+  {State:"NT",  Status:"Endangered",            Count:189},
+  {State:"NT",  Status:"Vulnerable",            Count:282},
+  {State:"TAS", Status:"Critically Endangered", Count:22},
+  {State:"TAS", Status:"Endangered",            Count:89},
+  {State:"TAS", Status:"Vulnerable",            Count:201},
+  {State:"ACT", Status:"Critically Endangered", Count:12},
+  {State:"ACT", Status:"Endangered",            Count:31},
+  {State:"ACT", Status:"Vulnerable",            Count:55},
+];
+
+const threatData = [
+  {Threat:"Habitat loss & degradation", Count:1210},
+  {Threat:"Invasive species & disease", Count:966},
+  {Threat:"Adverse fire regimes",       Count:423},
+  {Threat:"Climate change",             Count:387},
+  {Threat:"Bycatch & fishing",          Count:156},
+  {Threat:"Overhunting & collection",   Count:134},
+  {Threat:"Pollution",                  Count:98},
+  {Threat:"Disrupted hydrology",        Count:87},
+];
+
+const bubbleData = [
+  {Group:"Mammal", Threat:"Invasive species", Count:89},
+  {Group:"Mammal", Threat:"Habitat loss",     Count:112},
+  {Group:"Mammal", Threat:"Fire regimes",     Count:34},
+  {Group:"Bird",   Threat:"Habitat loss",     Count:198},
+  {Group:"Bird",   Threat:"Invasive species", Count:67},
+  {Group:"Bird",   Threat:"Bycatch",          Count:45},
+  {Group:"Reptile",Threat:"Habitat loss",     Count:134},
+  {Group:"Reptile",Threat:"Invasive species", Count:58},
+  {Group:"Reptile",Threat:"Climate change",   Count:29},
+  {Group:"Frog",   Threat:"Disease",          Count:56},
+  {Group:"Frog",   Threat:"Habitat loss",     Count:34},
+  {Group:"Frog",   Threat:"Climate change",   Count:22},
+  {Group:"Fish",   Threat:"Habitat loss",     Count:49},
+  {Group:"Fish",   Threat:"Invasive species", Count:23},
+  {Group:"Fish",   Threat:"Overfishing",      Count:18},
+  {Group:"Plant",  Threat:"Habitat loss",     Count:456},
+  {Group:"Plant",  Threat:"Invasive species", Count:213},
+  {Group:"Plant",  Threat:"Fire regimes",     Count:98},
+];
+
+// Species scatter data (subset from epbc CSV)
+const scatterData = [
+  {Name:"Leadbeater's Possum",       Group:"Mammal",  Year:2015, States:2, Status:"Critically Endangered"},
+  {Name:"Mountain Pygmy-possum",     Group:"Mammal",  Year:2016, States:2, Status:"Critically Endangered"},
+  {Name:"Gilbert's Potoroo",         Group:"Mammal",  Year:1994, States:1, Status:"Critically Endangered"},
+  {Name:"N. Hairy-nosed Wombat",     Group:"Mammal",  Year:1992, States:1, Status:"Critically Endangered"},
+  {Name:"Koala",                     Group:"Mammal",  Year:2022, States:2, Status:"Endangered"},
+  {Name:"Greater Glider",            Group:"Mammal",  Year:2022, States:3, Status:"Endangered"},
+  {Name:"Tasmanian Devil",           Group:"Mammal",  Year:2008, States:1, Status:"Endangered"},
+  {Name:"Numbat",                    Group:"Mammal",  Year:1992, States:1, Status:"Endangered"},
+  {Name:"Bilby",                     Group:"Mammal",  Year:1992, States:5, Status:"Vulnerable"},
+  {Name:"Humpback Whale",            Group:"Mammal",  Year:1992, States:7, Status:"Vulnerable"},
+  {Name:"Blue Whale",                Group:"Mammal",  Year:1992, States:7, Status:"Endangered"},
+  {Name:"Dugong",                    Group:"Mammal",  Year:1992, States:5, Status:"Vulnerable"},
+  {Name:"Swift Parrot",              Group:"Bird",    Year:2016, States:4, Status:"Critically Endangered"},
+  {Name:"Orange-bellied Parrot",     Group:"Bird",    Year:1992, States:3, Status:"Critically Endangered"},
+  {Name:"Regent Honeyeater",         Group:"Bird",    Year:2016, States:3, Status:"Critically Endangered"},
+  {Name:"Plains-wanderer",           Group:"Bird",    Year:2016, States:4, Status:"Critically Endangered"},
+  {Name:"Helmeted Honeyeater",       Group:"Bird",    Year:1992, States:1, Status:"Critically Endangered"},
+  {Name:"Night Parrot",              Group:"Bird",    Year:1992, States:4, Status:"Endangered"},
+  {Name:"Gouldian Finch",            Group:"Bird",    Year:1992, States:3, Status:"Endangered"},
+  {Name:"Malleefowl",                Group:"Bird",    Year:2000, States:5, Status:"Vulnerable"},
+  {Name:"Little Penguin",            Group:"Bird",    Year:2016, States:5, Status:"Vulnerable"},
+  {Name:"Wandering Albatross",       Group:"Bird",    Year:2000, States:6, Status:"Vulnerable"},
+  {Name:"S. Corroboree Frog",        Group:"Frog",    Year:1992, States:2, Status:"Critically Endangered"},
+  {Name:"N. Corroboree Frog",        Group:"Frog",    Year:2004, States:3, Status:"Critically Endangered"},
+  {Name:"Baw Baw Frog",              Group:"Frog",    Year:1992, States:1, Status:"Critically Endangered"},
+  {Name:"Spotted Tree Frog",         Group:"Frog",    Year:2004, States:2, Status:"Critically Endangered"},
+  {Name:"Growling Grass Frog",       Group:"Frog",    Year:2004, States:5, Status:"Vulnerable"},
+  {Name:"Loggerhead Turtle",         Group:"Reptile", Year:1994, States:6, Status:"Endangered"},
+  {Name:"Grassland Earless Dragon",  Group:"Reptile", Year:2016, States:3, Status:"Critically Endangered"},
+  {Name:"Pygmy Blue-tongue Lizard",  Group:"Reptile", Year:1992, States:1, Status:"Endangered"},
+  {Name:"Green Turtle",              Group:"Reptile", Year:1994, States:6, Status:"Vulnerable"},
+  {Name:"Barred Galaxias",           Group:"Fish",    Year:1992, States:1, Status:"Critically Endangered"},
+  {Name:"Pedder Galaxias",           Group:"Fish",    Year:1992, States:1, Status:"Critically Endangered"},
+  {Name:"Clarence River Cod",        Group:"Fish",    Year:2010, States:2, Status:"Critically Endangered"},
+  {Name:"Murray Cod",                Group:"Fish",    Year:2010, States:4, Status:"Vulnerable"},
+  {Name:"Wollemi Pine",              Group:"Plant",   Year:1998, States:1, Status:"Critically Endangered"},
+  {Name:"Woolly Wattle",             Group:"Plant",   Year:2008, States:1, Status:"Vulnerable"},
+];
+
+const timelineData = [
+  {Year:1788, Event:"European settlement begins",              Type:"milestone"},
+  {Year:1845, Event:"Broad-faced Potoroo — extinct",           Type:"extinction"},
+  {Year:1887, Event:"Eastern Hare-wallaby — extinct",          Type:"extinction"},
+  {Year:1930, Event:"Thylacine (Tasmanian Tiger) — last known",Type:"extinction"},
+  {Year:1950, Event:"Pig-footed Bandicoot — extinct",          Type:"extinction"},
+  {Year:1960, Event:"Lesser Bilby — extinct",                  Type:"extinction"},
+  {Year:1983, Event:"Paradise Parrot — extinct",               Type:"extinction"},
+  {Year:1992, Event:"EPBC Act: 632 species listed",            Type:"milestone"},
+  {Year:2016, Event:"Bramble Cay Melomys — 1st climate extinct",Type:"extinction"},
+  {Year:2019, Event:"Black Summer megafires: 3B animals harmed",Type:"disaster"},
+  {Year:2021, Event:"12 species declared extinct by govt",     Type:"milestone"},
+  {Year:2024, Event:"1,923 species on threatened list",        Type:"milestone"},
+];
+
+// ─────────────────────────────────────────────────────────
+// CHART 1 — Trend line (multi-series area)
+// ─────────────────────────────────────────────────────────
+vegaEmbed("#chart-trend", {
+  $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+  ...THEME,
+  width: "container", height: 260,
+  data: {values: trendData},
+  mark: {type:"area", line:true, opacity:0.6, interpolate:"monotone"},
+  encoding: {
+    x: {field:"Year", type:"quantitative", axis:{format:"d", title:"Year"}},
+    y: {field:"Count", type:"quantitative", stack:"zero", axis:{title:"Number of Species Listed"}},
+    color: {
+      field:"Category", type:"nominal",
+      scale:{domain:["Critically Endangered","Endangered","Vulnerable"],
+             range:["#e05252","#f0b429","#3ddc84"]},
+      legend:{title:"Status"}
+    },
+    tooltip:[
+      {field:"Year", type:"quantitative"},
+      {field:"Category", type:"nominal"},
+      {field:"Count", type:"quantitative", title:"Species"}
+    ]
+  }
+}, EMBED_CONFIG);
+
+// ─────────────────────────────────────────────────────────
+// CHART 2 — Status donut
+// ─────────────────────────────────────────────────────────
+vegaEmbed("#chart-status-donut", {
+  $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+  ...THEME,
+  width: "container", height: 220,
+  data: {values: statusData},
+  mark: {type:"arc", innerRadius:55, outerRadius:95},
+  encoding: {
+    theta: {field:"Count", type:"quantitative"},
+    color: {
+      field:"Status", type:"nominal",
+      scale:{domain:["Critically Endangered","Endangered","Vulnerable"],
+             range:["#e05252","#f0b429","#3ddc84"]},
+      legend:{title:"Status"}
+    },
+    tooltip:[
+      {field:"Status", type:"nominal"},
+      {field:"Count",  type:"quantitative", title:"Species"}
+    ]
+  }
+}, EMBED_CONFIG);
+
+// ─────────────────────────────────────────────────────────
+// CHART 3 — Bar by group
+// ─────────────────────────────────────────────────────────
+vegaEmbed("#chart-group-bar", {
+  $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+  ...THEME,
+  width: "container", height: 220,
+  data: {values: groupData},
+  mark: {type:"bar", cornerRadiusEnd:4},
+  encoding: {
+    y: {field:"Group",  type:"nominal",      sort:"-x", axis:{title:null}},
+    x: {field:"Count",  type:"quantitative", axis:{title:"Species"}},
+    color: {
+      field:"Group", type:"nominal",
+      scale:{domain:["Mammal","Bird","Reptile","Frog","Fish","Plant","Insect"],
+             range:["#e8833a","#3ddc84","#f0b429","#2ab5f5","#c84b8f","#7c6af7","#8b949e"]},
+      legend:null
+    },
+    tooltip:[{field:"Group"},{field:"Count", title:"Species"}]
+  }
+}, EMBED_CONFIG);
+
+// ─────────────────────────────────────────────────────────
+// CHART 4 — Map (choropleth using Vega-Lite's built-in topo)
+// ─────────────────────────────────────────────────────────
+const stateTotal = {
+  QLD:1198, NSW:1005, WA:871, VIC:678, SA:521, NT:489, TAS:312, ACT:98
+};
+
+// Map using Australia topojson from vega-datasets
+// ─────────────────────────────────────────────────────────
+// CHART 4 — Choropleth map (inline GeoJSON, no external URL)
+// ─────────────────────────────────────────────────────────
+const auFeatures = [{"state":"Queensland","code":"QLD","total":1198,"geometry":{"type":"Polygon","coordinates":[[[138.0,-26.0],[138.0,-29.0],[141.0,-29.0],[141.0,-34.0],[150.0,-29.0],[153.5,-28.0],[153.5,-26.0],[149.0,-20.5],[146.0,-17.0],[141.0,-17.0],[138.5,-15.5],[138.0,-16.0],[136.5,-14.0],[136.5,-14.5],[138.0,-17.0],[138.0,-26.0]]]}},{"state":"New South Wales","code":"NSW","total":1005,"geometry":{"type":"Polygon","coordinates":[[[141.0,-29.0],[141.0,-34.0],[150.0,-29.0],[153.5,-28.0],[153.6,-30.0],[153.5,-38.0],[150.5,-37.5],[148.0,-37.4],[146.5,-36.0],[145.0,-36.0],[143.0,-35.0],[141.0,-34.0],[141.0,-29.0]]]}},{"state":"Victoria","code":"VIC","total":678,"geometry":{"type":"Polygon","coordinates":[[[141.0,-34.0],[143.0,-35.0],[145.0,-36.0],[146.5,-36.0],[148.0,-37.4],[150.5,-37.5],[149.5,-38.5],[148.0,-38.5],[146.0,-39.0],[144.0,-38.5],[143.0,-39.0],[141.5,-38.5],[141.0,-38.0],[141.0,-34.0]]]}},{"state":"South Australia","code":"SA","total":521,"geometry":{"type":"Polygon","coordinates":[[[129.0,-26.0],[129.0,-31.5],[131.0,-31.5],[132.0,-32.0],[133.5,-32.5],[135.5,-35.0],[137.0,-35.5],[139.5,-37.0],[141.0,-38.0],[141.0,-34.0],[141.0,-29.0],[138.0,-29.0],[138.0,-26.0],[129.0,-26.0]]]}},{"state":"Western Australia","code":"WA","total":871,"geometry":{"type":"Polygon","coordinates":[[[129.0,-13.5],[126.0,-13.5],[123.5,-17.0],[122.0,-18.0],[114.0,-22.0],[113.5,-24.0],[113.0,-26.0],[113.5,-28.0],[114.0,-32.0],[115.7,-34.0],[118.0,-35.0],[122.0,-33.5],[124.0,-33.5],[126.0,-33.8],[129.0,-33.8],[129.0,-26.0],[129.0,-13.5]]]}},{"state":"Northern Territory","code":"NT","total":489,"geometry":{"type":"Polygon","coordinates":[[[129.0,-13.5],[136.5,-14.0],[138.5,-15.5],[138.0,-16.0],[136.5,-14.5],[136.5,-14.0],[138.0,-17.0],[138.0,-26.0],[129.0,-26.0],[129.0,-13.5]]]}},{"state":"Tasmania","code":"TAS","total":312,"geometry":{"type":"Polygon","coordinates":[[[144.5,-40.0],[146.0,-40.5],[148.5,-40.5],[148.5,-43.5],[147.0,-44.0],[145.0,-43.5],[144.0,-43.0],[143.5,-42.0],[144.5,-40.0]]]}},{"state":"Australian Capital Territory","code":"ACT","total":98,"geometry":{"type":"Polygon","coordinates":[[[148.7,-35.1],[149.4,-35.1],[149.4,-35.9],[148.7,-35.9],[148.7,-35.1]]]}}];
+
+// Convert to GeoJSON FeatureCollection for Vega-Lite
+const auGeo = {
+  type: "FeatureCollection",
+  features: auFeatures.map(d => ({
+    type: "Feature",
+    properties: {state: d.state, code: d.code, total: d.total},
+    geometry: d.geometry
+  }))
+};
+
+vegaEmbed("#chart-map", {
+  $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+  ...THEME,
+  width: "container", height: 420,
+  projection: {type: "mercator", center: [133, -27], scale: 700},
+  data: {values: auGeo.features},
+  mark: {type: "geoshape", stroke: "#30363d", strokeWidth: 1.5},
+  encoding: {
+    color: {
+      field: "properties.total", type: "quantitative",
+      scale: {scheme: "orangered", domain: [0, 1300]},
+      legend: {title: "Threatened Species", orient: "bottom-right", labelColor:"#8b949e", titleColor:"#8b949e"}
+    },
+    tooltip: [
+      {field: "properties.state", type: "nominal",      title: "State"},
+      {field: "properties.total", type: "quantitative", title: "Threatened Species"}
+    ]
+  }
+}, {actions: false});
+
+// ─────────────────────────────────────────────────────────
+// CHART 5 — Stacked bar by state
+// ─────────────────────────────────────────────────────────
+vegaEmbed("#chart-state-stacked", {
+  $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+  ...THEME,
+  width: "container", height: 280,
+  data: {values: stateFlat},
+  mark: {type:"bar"},
+  encoding: {
+    x: {field:"State", type:"nominal", sort:["-sum(Count)"], axis:{title:null}},
+    y: {field:"Count", type:"quantitative", stack:"zero", axis:{title:"Species"}},
+    color: {
+      field:"Group", type:"nominal",
+      scale:{domain:["Mammals","Birds","Reptiles","Frogs","Fish","Plants"],
+             range:["#e8833a","#3ddc84","#f0b429","#2ab5f5","#c84b8f","#7c6af7"]},
+      legend:{title:"Group"}
+    },
+    tooltip:[{field:"State"},{field:"Group"},{field:"Count", title:"Species"}]
+  }
+}, EMBED_CONFIG);
+
+// ─────────────────────────────────────────────────────────
+// CHART 6 — Heatmap state × status
+// ─────────────────────────────────────────────────────────
+vegaEmbed("#chart-heatmap", {
+  $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+  ...THEME,
+  width: "container", height: 280,
+  data: {values: heatmapData},
+  mark: {type:"rect", cornerRadius:4},
+  encoding: {
+    x: {field:"Status", type:"nominal",
+        sort:["Critically Endangered","Endangered","Vulnerable"],
+        axis:{title:null, labelAngle:-20}},
+    y: {field:"State",  type:"nominal",
+        sort:{field:"Count", order:"descending"},
+        axis:{title:null}},
+    color: {
+      field:"Count", type:"quantitative",
+      scale:{scheme:"reds"},
+      legend:{title:"Species"}
+    },
+    tooltip:[{field:"State"},{field:"Status"},{field:"Count", title:"Species"}]
+  }
+}, EMBED_CONFIG);
+
+// ─────────────────────────────────────────────────────────
+// CHART 7 — Threats horizontal bar
+// ─────────────────────────────────────────────────────────
+vegaEmbed("#chart-threats", {
+  $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+  ...THEME,
+  width: "container", height: 260,
+  data: {values: threatData},
+  mark: {type:"bar", cornerRadiusEnd:4},
+  encoding: {
+    y: {field:"Threat", type:"nominal",   sort:"-x", axis:{title:null}},
+    x: {field:"Count",  type:"quantitative", axis:{title:"Species Affected"}},
+    color: {
+      field:"Count", type:"quantitative",
+      scale:{scheme:"orangered", reverse:false},
+      legend:null
+    },
+    tooltip:[{field:"Threat"},{field:"Count", title:"Species Affected"}]
+  }
+}, EMBED_CONFIG);
+
+// ─────────────────────────────────────────────────────────
+// CHART 8 — Bubble: group × threat
+// ─────────────────────────────────────────────────────────
+vegaEmbed("#chart-bubble", {
+  $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+  ...THEME,
+  width: "container", height: 300,
+  data: {values: bubbleData},
+  mark: {type:"circle", opacity:0.85},
+  encoding: {
+    x: {field:"Threat", type:"nominal", axis:{title:null, labelAngle:-30}},
+    y: {field:"Group",  type:"nominal", axis:{title:null}},
+    size:{field:"Count", type:"quantitative",
+          scale:{range:[80,1400]},
+          legend:{
+            title:"Species",
+            symbolFillColor:"#dce3ea",
+            symbolOpacity:0.28,
+            symbolStrokeColor:"#ffffff",
+            symbolStrokeWidth:1
+          }},
+    color:{
+      field:"Group", type:"nominal",
+      scale:{domain:["Mammal","Bird","Reptile","Frog","Fish","Plant"],
+             range:["#e8833a","#3ddc84","#f0b429","#2ab5f5","#c84b8f","#7c6af7"]},
+      legend:{title:"Group", orient:"right"}
+    },
+    tooltip:[{field:"Group"},{field:"Threat"},{field:"Count", title:"Species"}]
+  }
+}, EMBED_CONFIG);
+
+// ─────────────────────────────────────────────────────────
+// CHART 9 — Threat proportion donut
+// ─────────────────────────────────────────────────────────
+const threatDonut = [
+  {Threat:"Habitat loss",      Pct:47},
+  {Threat:"Invasive species",  Pct:29},
+  {Threat:"Fire regimes",      Pct:10},
+  {Threat:"Climate change",    Pct:8},
+  {Threat:"Other",             Pct:6},
+];
+vegaEmbed("#chart-threat-donut", {
+  $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+  ...THEME,
+  width: "container", height: 220,
+  data: {values: threatDonut},
+  mark: {type:"arc", innerRadius:55, outerRadius:95},
+  encoding: {
+    theta: {field:"Pct", type:"quantitative"},
+    color: {
+      field:"Threat", type:"nominal",
+      scale:{range:["#e05252","#e8833a","#f0b429","#3ddc84","#8b949e"]},
+      legend:{title:"Primary Threat"}
+    },
+    tooltip:[{field:"Threat"},{field:"Pct", title:"% of species"}]
+  }
+}, EMBED_CONFIG);
+
+// ─────────────────────────────────────────────────────────
+// CHART 10 — Scatter: year listed vs state count
+// ─────────────────────────────────────────────────────────
+// Quadrant chart: X = Year Listed, Y = States Present
+// Midpoints: Year = 2007 (mid 1992-2022), States = 4 (mid 1-7)
+const midYear   = 2007;
+const midStates = 4;
+
+const quadrantLabels = [
+  {x: 1994, y: 6.5, label: "🟢 Long-listed, Wide Range", align:"left"},
+  {x: 2018, y: 6.5, label: "🔵 Newly listed, Wide Range", align:"left"},
+  {x: 1994, y: 0.5, label: "🔴 Long-listed, Narrow Range (MOST AT RISK)", align:"left"},
+  {x: 2018, y: 0.5, label: "🟡 Newly listed, Narrow Range", align:"left"},
+];
+
+vegaEmbed("#chart-scatter", {
+  $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+  ...THEME,
+  width: "container", height: 380,
+  resolve: {scale: {x:"shared", y:"shared"}},
+  layer: [
+    {
+      // Q3 background — most at risk (early listed, narrow range)
+      data: {values:[{x1:1992, x2:midYear, y1:0, y2:midStates}]},
+      mark: {type:"rect", opacity:0.07, color:"#e05252"},
+      encoding: {
+        x:  {field:"x1", type:"quantitative", scale:{domain:[1990,2025]}},
+        x2: {field:"x2"},
+        y:  {field:"y1", type:"quantitative", scale:{domain:[0,8]}},
+        y2: {field:"y2"}
+      }
+    },
+    {
+      // Vertical divider line
+      data: {values:[{yr:midYear}]},
+      mark: {type:"rule", color:"#8b949e", strokeDash:[4,4], strokeWidth:1},
+      encoding: {x:{field:"yr", type:"quantitative"}}
+    },
+    {
+      // Horizontal divider line
+      data: {values:[{st:midStates}]},
+      mark: {type:"rule", color:"#8b949e", strokeDash:[4,4], strokeWidth:1},
+      encoding: {y:{field:"st", type:"quantitative"}}
+    },
+    {
+      // Quadrant corner labels
+      data: {values: quadrantLabels},
+      mark: {type:"text", fontSize:9, opacity:0.5, fontStyle:"italic"},
+      encoding: {
+        x:    {field:"x", type:"quantitative"},
+        y:    {field:"y", type:"quantitative"},
+        text: {field:"label", type:"nominal"}
+      }
+    },
+    {
+      // Dots
+      data: {values: scatterData},
+      mark: {type:"circle", opacity:0.85, size:110},
+      encoding: {
+        x: {field:"Year",   type:"quantitative",
+            axis:{title:"Year First Listed", format:"d"}},
+        y: {field:"States", type:"quantitative",
+            axis:{title:"States / Territories Present"}},
+        color: {
+          field:"Group", type:"nominal",
+          scale:{domain:["Mammal","Bird","Reptile","Frog","Fish","Plant"],
+                 range:["#e8833a","#3ddc84","#f0b429","#2ab5f5","#c84b8f","#7c6af7"]},
+          legend:{title:"Group"}
+        },
+        tooltip:[
+          {field:"Name",   title:"Species"},
+          {field:"Group",  title:"Group"},
+          {field:"Status", title:"Status"},
+          {field:"Year",   title:"Year Listed", format:"d"},
+          {field:"States", title:"States Present"}
+        ]
+      }
+    }
+  ]
+}, EMBED_CONFIG);
+
+// ─────────────────────────────────────────────────────────
+// CHART 11 — Timeline
+// ─────────────────────────────────────────────────────────
+(function() {
+  const events = [
+    {year:1788, label:"European settlement begins",              type:"milestone"},
+    {year:1845, label:"Broad-faced Potoroo — extinct",           type:"extinction"},
+    {year:1887, label:"Eastern Hare-wallaby — extinct",          type:"extinction"},
+    {year:1930, label:"Thylacine (Tasmanian Tiger) — last seen", type:"extinction"},
+    {year:1950, label:"Pig-footed Bandicoot — extinct",          type:"extinction"},
+    {year:1960, label:"Lesser Bilby — extinct",                  type:"extinction"},
+    {year:1983, label:"Paradise Parrot — extinct",               type:"extinction"},
+    {year:1992, label:"EPBC Act: 632 species listed",            type:"milestone"},
+    {year:2016, label:"Bramble Cay Melomys — 1st climate extinction", type:"extinction"},
+    {year:2019, label:"Black Summer: 3 billion animals harmed",  type:"disaster"},
+    {year:2021, label:"12 species declared extinct by govt",     type:"milestone"},
+    {year:2024, label:"1,923 species on threatened list",        type:"milestone"},
+  ];
+  const colors = {extinction:"#e05252", milestone:"#3ddc84", disaster:"#f0b429"};
+  const labels = {extinction:"Extinction", milestone:"Milestone", disaster:"Disaster"};
+  let out = `<div style="font-family:'Source Sans 3',sans-serif;padding:0.5rem 0;">`;
+  out += `<div style="display:flex;gap:1.5rem;margin-bottom:2rem;flex-wrap:wrap;">`;
+  for (const [t,c] of Object.entries(colors))
+    out += `<span style="display:flex;align-items:center;gap:6px;color:#e6edf3;font-size:0.82rem;"><span style="width:11px;height:11px;border-radius:50%;background:${c};flex-shrink:0;"></span>${labels[t]}</span>`;
+  out += `</div><div style="position:relative;padding:0 0 0 2rem;">`;
+  out += `<div style="position:absolute;left:2rem;top:6px;bottom:6px;width:2px;background:#30363d;"></div>`;
+  events.forEach(ev => {
+    const c = colors[ev.type];
+    out += `<div style="display:flex;align-items:flex-start;margin-bottom:1.8rem;position:relative;">
+      <div style="position:absolute;left:calc(2rem - 7px);top:4px;width:14px;height:14px;border-radius:50%;background:${c};border:2px solid #0d1117;box-shadow:0 0 0 2px ${c};z-index:1;"></div>
+      <div style="margin-left:3rem;">
+        <div style="font-size:0.78rem;font-weight:700;color:${c};letter-spacing:0.05em;margin-bottom:2px;">${ev.year}</div>
+        <div style="font-size:0.9rem;color:#e6edf3;line-height:1.45;">${ev.label}</div>
+      </div></div>`;
+  });
+  out += `</div></div>`;
+  document.getElementById('chart-timeline-html').innerHTML = out;
+})();
+
+</script>
+</body>
+</html>
